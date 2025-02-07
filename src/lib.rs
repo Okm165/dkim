@@ -2,6 +2,7 @@
 
 use base64::engine::general_purpose;
 use base64::Engine;
+use chrono::Utc;
 use indexmap::map::IndexMap;
 use rsa::Pkcs1v15Sign;
 use rsa::RsaPrivateKey;
@@ -23,10 +24,10 @@ mod bytes;
 pub mod canonicalization;
 pub mod dns;
 mod errors;
-mod hash;
-mod header;
-mod parser;
-mod public_key;
+pub mod hash;
+pub mod header;
+pub mod parser;
+pub mod public_key;
 mod result;
 #[cfg(test)]
 mod roundtrip_test;
@@ -43,7 +44,7 @@ const SIGN_EXPIRATION_DRIFT_MINS: i64 = 15;
 const DNS_NAMESPACE: &str = "_domainkey";
 
 #[derive(Debug)]
-pub(crate) enum DkimPublicKey {
+pub enum DkimPublicKey {
     Rsa(RsaPublicKey),
     Ed25519(ed25519_dalek::VerifyingKey),
 }
@@ -55,7 +56,7 @@ pub enum DkimPrivateKey {
 }
 
 // https://datatracker.ietf.org/doc/html/rfc6376#section-6.1.1
-fn validate_header(value: &str) -> Result<DKIMHeader, DKIMError> {
+pub fn validate_header(value: &str) -> Result<DKIMHeader, DKIMError> {
     let (_, tags) =
         parser::tag_list(value).map_err(|err| DKIMError::SignatureSyntaxError(err.to_string()))?;
 
@@ -118,13 +119,13 @@ fn validate_header(value: &str) -> Result<DKIMHeader, DKIMError> {
 
     // Check that "x=" tag isn't expired
     if let Some(expiration) = header.get_tag("x") {
-        let mut expiration = chrono::NaiveDateTime::from_timestamp_opt(
+        let mut expiration = chrono::DateTime::<Utc>::from_timestamp(
             expiration.parse::<i64>().unwrap_or_default(),
             0,
         )
         .ok_or(DKIMError::SignatureExpired)?;
         expiration += chrono::Duration::minutes(SIGN_EXPIRATION_DRIFT_MINS);
-        let now = chrono::Utc::now().naive_utc();
+        let now = chrono::Utc::now().to_utc();
         if now > expiration {
             return Err(DKIMError::SignatureExpired);
         }

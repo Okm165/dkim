@@ -18,7 +18,7 @@ impl std::string::ToString for Type {
 /// Canonicalize body using the simple canonicalization algorithm.
 ///
 /// The first argument **must** be the body of the mail.
-pub(crate) fn canonicalize_body_simple(mut body: &[u8]) -> Vec<u8> {
+pub fn canonicalize_body_simple(mut body: &[u8]) -> Vec<u8> {
     if body.is_empty() {
         return b"\r\n".to_vec();
     }
@@ -34,7 +34,7 @@ pub(crate) fn canonicalize_body_simple(mut body: &[u8]) -> Vec<u8> {
 /// Canonicalize body using the relaxed canonicalization algorithm.  
 ///
 /// The first argument **must** be the body of the mail.
-pub(crate) fn canonicalize_body_relaxed(body: &[u8]) -> Vec<u8> {
+pub fn canonicalize_body_relaxed(body: &[u8]) -> Vec<u8> {
     let mut body = body.to_vec();
     // See https://tools.ietf.org/html/rfc6376#section-3.4.4 for implementation details
 
@@ -76,7 +76,7 @@ pub(crate) fn canonicalize_body_relaxed(body: &[u8]) -> Vec<u8> {
 }
 
 // https://datatracker.ietf.org/doc/html/rfc6376#section-3.4.1
-pub(crate) fn canonicalize_header_simple(key: &str, value: &[u8]) -> Vec<u8> {
+pub fn canonicalize_header_simple(key: &str, value: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     out.extend_from_slice(key.as_bytes());
     out.extend_from_slice(b": ");
@@ -87,7 +87,7 @@ pub(crate) fn canonicalize_header_simple(key: &str, value: &[u8]) -> Vec<u8> {
 }
 
 // https://datatracker.ietf.org/doc/html/rfc6376#section-3.4.2
-pub(crate) fn canonicalize_header_relaxed(key: &str, value: &[u8]) -> Vec<u8> {
+pub fn canonicalize_header_relaxed(key: &str, value: &[u8]) -> Vec<u8> {
     let key = key.to_lowercase();
     let key = key.trim_end();
     let value = canonicalize_header_value_relaxed(value);

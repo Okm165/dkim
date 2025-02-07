@@ -9,18 +9,13 @@ use crate::canonicalization::{
     canonicalize_header_simple,
 };
 use crate::header::HEADER;
-use crate::{bytes, DKIMError, DKIMHeader};
+use crate::{DKIMError, DKIMHeader};
 
 #[derive(Debug, Clone)]
 pub enum HashAlgo {
     RsaSha1,
     RsaSha256,
     Ed25519Sha256,
-}
-
-/// Get the body part of an email
-fn get_body<'a>(email: &'a mailparse::ParsedMail<'a>) -> Result<Vec<u8>, DKIMError> {
-    Ok(bytes::get_all_after(email.raw_bytes, b"\r\n\r\n").to_vec())
 }
 
 fn hash_sha1<T: AsRef<[u8]>>(data: T) -> Vec<u8> {
@@ -47,7 +42,7 @@ pub(crate) fn compute_body_hash<'a>(
     hash_algo: HashAlgo,
     email: &'a mailparse::ParsedMail<'a>,
 ) -> Result<String, DKIMError> {
-    let body = get_body(email)?;
+    let body = email.get_body_raw().unwrap();
 
     let mut canonicalized_body = if canonicalization_type == canonicalization::Type::Simple {
         canonicalize_body_simple(&body)
@@ -69,7 +64,7 @@ pub(crate) fn compute_body_hash<'a>(
     Ok(general_purpose::STANDARD.encode(hash))
 }
 
-fn select_headers<'a>(
+pub fn select_headers<'a>(
     dkim_header: &str,
     email: &'a mailparse::ParsedMail<'a>,
 ) -> Result<Vec<(String, &'a [u8])>, DKIMError> {

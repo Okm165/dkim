@@ -116,7 +116,7 @@ pub(crate) fn parse_hash_algo(value: &str) -> Result<hash::HashAlgo, DKIMError> 
 
 /// Parses the canonicalization value (passed in c=) and returns canonicalization
 /// for (Header, Body)
-pub(crate) fn parse_canonicalization(
+pub fn parse_canonicalization(
     value: Option<String>,
 ) -> Result<(canonicalization::Type, canonicalization::Type), DKIMError> {
     use canonicalization::Type::{Relaxed, Simple};
